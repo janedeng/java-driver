@@ -49,8 +49,7 @@ public class GuavaSessionBuilder extends SessionBuilder<GuavaSessionBuilder, Gua
         schemaChangeListener,
         requestTracker,
         nodeFilters,
-        classLoader,
-        additionalStartupOptions);
+        classLoader);
   }
 
   @Override

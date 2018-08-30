@@ -19,7 +19,6 @@ import com.datastax.oss.driver.api.core.MavenCoordinates;
 import com.datastax.oss.driver.internal.core.DefaultMavenCoordinates;
 import com.datastax.oss.protocol.internal.request.Startup;
 import com.datastax.oss.protocol.internal.util.collection.NullAllowingImmutableMap;
-import java.util.HashMap;
 import java.util.Map;
 import net.jcip.annotations.Immutable;
 
@@ -34,38 +33,9 @@ public class StartupOptionsBuilder {
           StartupOptionsBuilder.class.getResource("/com/datastax/oss/driver/Driver.properties"));
 
   private final InternalDriverContext context;
-  private final Map<String, String> additionalOptions = new HashMap<>();
 
   public StartupOptionsBuilder(InternalDriverContext context) {
     this.context = context;
-  }
-
-  /**
-   * Adds additional startup options to the builder.
-   *
-   * <p>The additional options set here should NOT include DRIVER_NAME, DRIVER_VERSION, CQL_VERSION
-   * or COMPRESSION as those are derived from the driver itself.
-   *
-   * @param additionalOptions Extra options to send in a Startup message.
-   */
-  public StartupOptionsBuilder withAdditionalOptions(Map<String, String> additionalOptions) {
-    if (additionalOptions != null) {
-      additionalOptions
-          .entrySet()
-          .forEach(
-              (entry) -> {
-                String additionalOptionKey = entry.getKey();
-                String additionalOptionValue = entry.getValue();
-                // only add non-internal options
-                if (!DRIVER_NAME_KEY.equals(additionalOptionKey)
-                    && !DRIVER_VERSION_KEY.equals(additionalOptionKey)
-                    && !Startup.COMPRESSION_KEY.equals(additionalOptionKey)
-                    && !Startup.CQL_VERSION_KEY.equals(additionalOptionKey)) {
-                  this.additionalOptions.put(additionalOptionKey, additionalOptionValue);
-                }
-              });
-    }
-    return this;
   }
 
   /**
@@ -83,17 +53,16 @@ public class StartupOptionsBuilder {
    * @return Map of Startup Options.
    */
   public Map<String, String> build() {
-    NullAllowingImmutableMap.Builder<String, String> builder =
-        NullAllowingImmutableMap.builder(3 + additionalOptions.size());
-    // add compression option
+    NullAllowingImmutableMap.Builder<String, String> builder = NullAllowingImmutableMap.builder(3);
+    // add compression (if configured) and driver name and version
     String compressionAlgorithm = context.getCompressor().algorithm();
     if (compressionAlgorithm != null && !compressionAlgorithm.trim().isEmpty()) {
       builder.put(Startup.COMPRESSION_KEY, compressionAlgorithm.trim());
     }
-    // add driver name and version
-    builder.put(DRIVER_NAME_KEY, getDriverName()).put(DRIVER_VERSION_KEY, getDriverVersion());
-    // add any additonal options
-    return builder.putAll(additionalOptions).build();
+    return builder
+        .put(DRIVER_NAME_KEY, getDriverName())
+        .put(DRIVER_VERSION_KEY, getDriverVersion())
+        .build();
   }
 
   /**

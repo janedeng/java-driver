@@ -181,7 +181,8 @@ public class DefaultDriverContext implements InternalDriverContext {
   private final LazyReference<NodeStateListener> nodeStateListenerRef;
   private final LazyReference<SchemaChangeListener> schemaChangeListenerRef;
   private final LazyReference<RequestTracker> requestTrackerRef;
-  private final LazyReference<StartupOptionsBuilder> startupOptionsBuilderRef;
+  private final LazyReference<StartupOptionsBuilder> startupOptionsBuilderRef =
+      new LazyReference<>("startupOptionsBuilder", this::buildStartupOptions, cycleDetector);
 
   private final DriverConfig config;
   private final DriverConfigLoader configLoader;
@@ -201,8 +202,7 @@ public class DefaultDriverContext implements InternalDriverContext {
       SchemaChangeListener schemaChangeListener,
       RequestTracker requestTracker,
       Map<String, Predicate<Node>> nodeFilters,
-      ClassLoader classLoader,
-      Map<String, String> additionalStartupOptions) {
+      ClassLoader classLoader) {
     this.config = configLoader.getInitialConfig();
     this.configLoader = configLoader;
     DriverExecutionProfile defaultProfile = config.getDefaultProfile();
@@ -230,11 +230,6 @@ public class DefaultDriverContext implements InternalDriverContext {
             "requestTracker", () -> buildRequestTracker(requestTrackerFromBuilder), cycleDetector);
     this.nodeFiltersFromBuilder = nodeFilters;
     this.classLoader = classLoader;
-    this.startupOptionsBuilderRef =
-        new LazyReference<>(
-            "startupOptionsBuilder",
-            () -> buildStartupOptions(additionalStartupOptions),
-            cycleDetector);
   }
 
   /**
@@ -244,9 +239,8 @@ public class DefaultDriverContext implements InternalDriverContext {
    * building process, with the options passed here being set by {@link
    * com.datastax.oss.driver.api.core.session.SessionBuilder#withCustomStartupOptions(java.util.Map)}
    */
-  protected StartupOptionsBuilder buildStartupOptions(
-      Map<String, String> additionalStartupOptions) {
-    return new StartupOptionsBuilder(this).withAdditionalOptions(additionalStartupOptions);
+  protected StartupOptionsBuilder buildStartupOptions() {
+    return new StartupOptionsBuilder(this);
   }
 
   protected Map<String, LoadBalancingPolicy> buildLoadBalancingPolicies() {

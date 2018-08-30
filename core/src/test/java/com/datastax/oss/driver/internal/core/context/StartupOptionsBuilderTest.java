@@ -32,7 +32,6 @@ import com.datastax.oss.driver.internal.core.DefaultMavenCoordinates;
 import com.datastax.oss.driver.shaded.guava.common.collect.Lists;
 import com.datastax.oss.driver.shaded.guava.common.collect.Maps;
 import com.datastax.oss.protocol.internal.request.Startup;
-import com.datastax.oss.protocol.internal.util.collection.NullAllowingImmutableMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -67,10 +66,7 @@ public class StartupOptionsBuilderTest {
     MockitoAnnotations.initMocks(this);
     Mockito.when(configLoader.getInitialConfig()).thenReturn(driverConfig);
     Mockito.when(driverConfig.getDefaultProfile()).thenReturn(defaultProfile);
-  }
-
-  private void buildContext(Map<String, String> additionalStartupOptions) {
-    this.defaultDriverContext =
+    defaultDriverContext =
         new DefaultDriverContext(
             configLoader,
             typeCodecs,
@@ -78,8 +74,7 @@ public class StartupOptionsBuilderTest {
             schemaChangeListener,
             requestTracker,
             nodeFilters,
-            classLoader,
-            additionalStartupOptions);
+            classLoader);
   }
 
   private void assertDefaultStartupOptions(Startup startup) {
@@ -93,21 +88,7 @@ public class StartupOptionsBuilderTest {
 
   @Test
   public void should_build_minimal_startup_options() {
-    buildContext(null);
     Startup startup = new Startup(defaultDriverContext.getStartupOptions());
-    assertThat(startup.options).doesNotContainKey(Startup.COMPRESSION_KEY);
-    assertDefaultStartupOptions(startup);
-  }
-
-  @Test
-  public void should_build_startup_options_with_custom_options() {
-    Map<String, String> customOptions =
-        NullAllowingImmutableMap.of("Custom_Key1", "Custom_Value1", "Custom_Key2", "Custom_Value2");
-    buildContext(customOptions);
-    Startup startup = new Startup(defaultDriverContext.getStartupOptions());
-    // assert the custom options are present
-    assertThat(startup.options).containsEntry("Custom_Key1", "Custom_Value1");
-    assertThat(startup.options).containsEntry("Custom_Key2", "Custom_Value2");
     assertThat(startup.options).doesNotContainKey(Startup.COMPRESSION_KEY);
     assertDefaultStartupOptions(startup);
   }
@@ -118,51 +99,9 @@ public class StartupOptionsBuilderTest {
         .thenReturn(Boolean.TRUE);
     Mockito.when(defaultProfile.getString(DefaultDriverOption.PROTOCOL_COMPRESSION))
         .thenReturn("lz4");
-    buildContext(null);
     Startup startup = new Startup(defaultDriverContext.getStartupOptions());
     // assert the compression option is present
     assertThat(startup.options).containsEntry(Startup.COMPRESSION_KEY, "lz4");
-    assertDefaultStartupOptions(startup);
-  }
-
-  @Test
-  public void should_not_override_internal_startup_options() {
-    Map<String, String> customOptions =
-        NullAllowingImmutableMap.of(
-            StartupOptionsBuilder.DRIVER_NAME_KEY,
-            "Custom_Value1",
-            StartupOptionsBuilder.DRIVER_VERSION_KEY,
-            "Custom_Value2",
-            Startup.CQL_VERSION_KEY,
-            "9.9.9999");
-    buildContext(customOptions);
-    Startup startup = new Startup(defaultDriverContext.getStartupOptions());
-    // assert the custom options are present
-    assertThat(startup.options).doesNotContainKey(Startup.COMPRESSION_KEY);
-    assertDefaultStartupOptions(startup);
-  }
-
-  @Test
-  public void should_not_override_compression_startup_option() {
-    Mockito.when(defaultProfile.isDefined(DefaultDriverOption.PROTOCOL_COMPRESSION))
-        .thenReturn(Boolean.TRUE);
-    Mockito.when(defaultProfile.getString(DefaultDriverOption.PROTOCOL_COMPRESSION))
-        .thenReturn("snappy");
-    Map<String, String> customOptions =
-        NullAllowingImmutableMap.of(
-            "Custom_Key1",
-            "Custom_Value1",
-            "Custom_Key2",
-            "Custom_Value2",
-            Startup.COMPRESSION_KEY,
-            "lz4");
-    buildContext(customOptions);
-    Startup startup = new Startup(defaultDriverContext.getStartupOptions());
-    // assert the custom options are present
-    assertThat(startup.options).containsEntry("Custom_Key1", "Custom_Value1");
-    assertThat(startup.options).containsEntry("Custom_Key2", "Custom_Value2");
-    // assert the compression option is present and not overwritten by custom options
-    assertThat(startup.options).containsEntry(Startup.COMPRESSION_KEY, "snappy");
     assertDefaultStartupOptions(startup);
   }
 }

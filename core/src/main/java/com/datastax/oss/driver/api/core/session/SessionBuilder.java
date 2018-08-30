@@ -41,7 +41,6 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -72,7 +71,6 @@ public abstract class SessionBuilder<SelfT extends SessionBuilder, SessionT> {
   private ImmutableMap.Builder<String, Predicate<Node>> nodeFilters = ImmutableMap.builder();
   protected CqlIdentifier keyspace;
   private ClassLoader classLoader = null;
-  protected Map<String, String> additionalStartupOptions = new HashMap<>();
 
   /**
    * Sets the configuration loader to use.
@@ -260,20 +258,6 @@ public abstract class SessionBuilder<SelfT extends SessionBuilder, SessionT> {
   }
 
   /**
-   * A {@link Map} of custom options to send in the Startup message.
-   *
-   * <p>This is used when a client wants/needs to send additional options in the Startup message
-   * that the driver doesn't already provide. The driver should already provide CQL_VERSION,
-   * COMPRESSION, DRIVER_NAME and DRIVER_VERSION options, so those should NOT be explicitly set via
-   * this method.
-   */
-  @NonNull
-  public SelfT withAdditionalStartupOptions(@Nullable Map<String, String> options) {
-    this.additionalStartupOptions = options;
-    return self;
-  }
-
-  /**
    * Creates the session with the options set by this builder.
    *
    * @return a completion stage that completes with the session when it is fully initialized.
@@ -356,8 +340,7 @@ public abstract class SessionBuilder<SelfT extends SessionBuilder, SessionT> {
         schemaChangeListener,
         requestTracker,
         nodeFilters,
-        classLoader,
-        additionalStartupOptions);
+        classLoader);
   }
 
   private static <T> T buildIfNull(T value, Supplier<T> builder) {
