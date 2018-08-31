@@ -66,6 +66,9 @@ public class StartupOptionsBuilderTest {
     MockitoAnnotations.initMocks(this);
     Mockito.when(configLoader.getInitialConfig()).thenReturn(driverConfig);
     Mockito.when(driverConfig.getDefaultProfile()).thenReturn(defaultProfile);
+  }
+
+  private void buildDriverContext() {
     defaultDriverContext =
         new DefaultDriverContext(
             configLoader,
@@ -88,6 +91,7 @@ public class StartupOptionsBuilderTest {
 
   @Test
   public void should_build_minimal_startup_options() {
+    buildDriverContext();
     Startup startup = new Startup(defaultDriverContext.getStartupOptions());
     assertThat(startup.options).doesNotContainKey(Startup.COMPRESSION_KEY);
     assertDefaultStartupOptions(startup);
@@ -99,6 +103,7 @@ public class StartupOptionsBuilderTest {
         .thenReturn(Boolean.TRUE);
     Mockito.when(defaultProfile.getString(DefaultDriverOption.PROTOCOL_COMPRESSION))
         .thenReturn("lz4");
+    buildDriverContext();
     Startup startup = new Startup(defaultDriverContext.getStartupOptions());
     // assert the compression option is present
     assertThat(startup.options).containsEntry(Startup.COMPRESSION_KEY, "lz4");

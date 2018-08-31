@@ -48,8 +48,6 @@ public class StartupOptionsBuilder {
    * constructor will add {@link
    * com.datastax.oss.protocol.internal.request.Startup#CQL_VERSION_KEY}.
    *
-   * <p>Additional options can be set via {@link #withAdditionalOptions(java.util.Map)}.
-   *
    * @return Map of Startup Options.
    */
   public Map<String, String> build() {
@@ -70,9 +68,6 @@ public class StartupOptionsBuilder {
    *
    * <p>By default, this method will pull from the bundled Driver.properties file. Subclasses should
    * override this method if they need to report a different Driver name on Startup.
-   *
-   * <p><b>NOTE:</b> The Driver name can not be set via {@link
-   * #withAdditionalOptions(java.util.Map)}
    */
   protected String getDriverName() {
     return MAVEN_COORDINATES.getName();
@@ -83,9 +78,6 @@ public class StartupOptionsBuilder {
    *
    * <p>By default, this method will pull from the bundled Driver.properties file. Subclasses should
    * override this method if they need to report a different Driver version on Startup.
-   *
-   * <p><b>NOTE:</b> The Driver version can not be set via {@link
-   * #withAdditionalOptions(java.util.Map)}
    */
   protected String getDriverVersion() {
     return MAVEN_COORDINATES.getVersion().toString();

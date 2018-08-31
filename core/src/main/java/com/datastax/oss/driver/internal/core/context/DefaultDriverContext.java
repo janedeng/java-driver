@@ -181,8 +181,6 @@ public class DefaultDriverContext implements InternalDriverContext {
   private final LazyReference<NodeStateListener> nodeStateListenerRef;
   private final LazyReference<SchemaChangeListener> schemaChangeListenerRef;
   private final LazyReference<RequestTracker> requestTrackerRef;
-  private final LazyReference<StartupOptionsBuilder> startupOptionsBuilderRef =
-      new LazyReference<>("startupOptionsBuilder", this::buildStartupOptions, cycleDetector);
 
   private final DriverConfig config;
   private final DriverConfigLoader configLoader;
@@ -194,6 +192,7 @@ public class DefaultDriverContext implements InternalDriverContext {
   private final RequestTracker requestTrackerFromBuilder;
   private final Map<String, Predicate<Node>> nodeFiltersFromBuilder;
   private final ClassLoader classLoader;
+  private final Map<String, String> startupOptions;
 
   public DefaultDriverContext(
       DriverConfigLoader configLoader,
@@ -230,6 +229,7 @@ public class DefaultDriverContext implements InternalDriverContext {
             "requestTracker", () -> buildRequestTracker(requestTrackerFromBuilder), cycleDetector);
     this.nodeFiltersFromBuilder = nodeFilters;
     this.classLoader = classLoader;
+    this.startupOptions = buildStartupOptions().build();
   }
 
   /**
@@ -748,6 +748,6 @@ public class DefaultDriverContext implements InternalDriverContext {
   @NonNull
   @Override
   public Map<String, String> getStartupOptions() {
-    return startupOptionsBuilderRef.get().build();
+    return startupOptions;
   }
 }
